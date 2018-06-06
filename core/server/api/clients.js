@@ -1,13 +1,12 @@
 // # Client API
 // RESTful API for the Client resource
-var Promise = require('bluebird'),
-    _ = require('lodash'),
+let Promise = require('bluebird'),
+    {extend, omit} = require('lodash'),
     pipeline = require('../lib/promise/pipeline'),
     localUtils = require('./utils'),
     models = require('../models'),
     common = require('../lib/common'),
-    docName = 'clients',
-    clients;
+    docName = 'clients', clients;
 
 /**
  * ### Clients API Methods
@@ -22,8 +21,7 @@ clients = {
      * @return {Promise<Client>} Client
      */
     read: function read(options) {
-        var attrs = ['id', 'slug'],
-            tasks;
+        let attrs = ['id', 'slug'], tasks;
 
         /**
          * ### Model Query
@@ -33,9 +31,9 @@ clients = {
          */
         function doQuery(options) {
             // only User Agent (type = `ua`) clients are available at the moment.
-            options.data = _.extend(options.data, {type: 'ua'});
+            options.data = extend(options.data, {type: 'ua'});
 
-            return models.Client.findOne(options.data, _.omit(options, ['data']))
+            return models.Client.findOne(options.data, omit(options, ['data']))
                 .then(function onModelResponse(model) {
                     if (!model) {
                         return Promise.reject(new common.errors.NotFoundError({
