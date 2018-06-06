@@ -1,5 +1,5 @@
 let Promise = require('bluebird'),
-    _ = require('lodash'),
+    {extend, merge, omit, cloneDeep, assign} = require('lodash'),
     validator = require('validator'),
     config = require('../config'),
     common = require('../lib/common'),
@@ -84,7 +84,7 @@ function setupTasks(setupData) {
                 });
             }
 
-            return User.setup(userData, _.extend({id: owner.id}, context));
+            return User.setup(userData, extend({id: owner.id}, context));
         }).then(function then(user) {
             return {
                 user: user,
@@ -157,7 +157,7 @@ authentication = {
             let options = {context: {internal: true}},
                 dbHash, token;
 
-            return settingsAPI.read(_.merge({key: 'db_hash'}, options))
+            return settingsAPI.read(merge({key: 'db_hash'}, options))
                 .then(function fetchedSettings(response) {
                     dbHash = response.settings[0].value;
 
@@ -273,8 +273,8 @@ authentication = {
 
         // @TODO: use brute force middleware (see https://github.com/TryGhost/Ghost/pull/7579)
         function protectBruteForce(options) {
-            if (tokenSecurity[tokenParts.email + '+' + tokenParts.expires] &&
-                tokenSecurity[tokenParts.email + '+' + tokenParts.expires].count >= 10) {
+            if (tokenSecurity[`${tokenParts.email}+${tokenParts.expires}`] &&
+                tokenSecurity[`${tokenParts.email}+${tokenParts.expires}`].count >= 10) {
                 return Promise.reject(new common.errors.NoPermissionError({
                     message: common.i18n.t('errors.models.user.tokenLocked')
                 }));
@@ -289,7 +289,7 @@ authentication = {
                 oldPassword = data.oldPassword,
                 newPassword = data.newPassword;
 
-            return settingsAPI.read(_.merge({key: 'db_hash'}, _.omit(options, 'data')))
+            return settingsAPI.read(merge({key: 'db_hash'}, omit(options, 'data')))
                 .then(function fetchedSettings(response) {
                     dbHash = response.settings[0].value;
 
@@ -312,7 +312,7 @@ authentication = {
                         }));
                     }
 
-                    spamPrevention.userLogin().reset(opts.ip, tokenParts.email + 'login');
+                    spamPrevention.userLogin().reset(opts.ip, `${tokenParts.email}login`);
 
                     return models.User.changePassword({
                         oldPassword: oldPassword,
@@ -437,7 +437,7 @@ authentication = {
      */
     isInvitation: function isInvitation(options) {
         let tasks,
-            localOptions = _.cloneDeep(options || {});
+            localOptions = cloneDeep(options || {});
 
         function processArgs(options) {
             const email = options.email;
@@ -573,14 +573,14 @@ authentication = {
      */
     updateSetup: function updateSetup(setupDetails, options) {
         let tasks,
-            localOptions = _.cloneDeep(options || {});
+            localOptions = cloneDeep(options || {});
 
         function processArgs(setupDetails, options) {
             if (!options.context || !options.context.user) {
                 throw new common.errors.NoPermissionError({message: common.i18n.t('errors.api.authentication.notTheBlogOwner')});
             }
 
-            return _.assign({setupDetails: setupDetails}, options);
+            return assign({setupDetails: setupDetails}, options);
         }
 
         function checkPermission(options) {
@@ -617,10 +617,10 @@ authentication = {
      */
     revoke: function revokeToken(tokenDetails, options) {
         let tasks,
-            localOptions = _.cloneDeep(options || {});
+            localOptions = cloneDeep(options || {});
 
         function processArgs(tokenDetails, options) {
-            return _.assign({}, tokenDetails, options);
+            return assign({}, tokenDetails, options);
         }
 
         function revokeToken(options) {
