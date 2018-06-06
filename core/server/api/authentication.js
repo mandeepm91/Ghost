@@ -1,4 +1,4 @@
-var Promise = require('bluebird'),
+let Promise = require('bluebird'),
     _ = require('lodash'),
     validator = require('validator'),
     config = require('../config'),
@@ -40,7 +40,7 @@ function assertSetupCompleted(status) {
                 return __;
             }
 
-            var completed = common.i18n.t('errors.api.authentication.setupAlreadyCompleted'),
+            const completed = common.i18n.t('errors.api.authentication.setupAlreadyCompleted'),
                 notCompleted = common.i18n.t('errors.api.authentication.setupMustBeCompleted');
 
             function throwReason(reason) {
@@ -57,11 +57,11 @@ function assertSetupCompleted(status) {
 }
 
 function setupTasks(setupData) {
-    var tasks;
+    let tasks;
 
     function validateData(setupData) {
         return localUtils.checkObject(setupData, 'setup').then(function then(checked) {
-            var data = checked.setup[0];
+            const data = checked.setup[0];
 
             return {
                 name: data.name,
@@ -74,7 +74,7 @@ function setupTasks(setupData) {
     }
 
     function setupUser(userData) {
-        var context = {context: {internal: true}},
+        const context = {context: {internal: true}},
             User = models.User;
 
         return User.findOne({role: 'Owner', status: 'all'}).then(function then(owner) {
@@ -94,7 +94,7 @@ function setupTasks(setupData) {
     }
 
     function doSettings(data) {
-        var user = data.user,
+        let user = data.user,
             blogTitle = data.userData.blogTitle,
             context = {context: {user: data.user.id}},
             userSettings;
@@ -137,11 +137,11 @@ authentication = {
      * @returns {Promise<Object>} message
      */
     generateResetToken: function generateResetToken(object) {
-        var tasks;
+        let tasks;
 
         function validateRequest(object) {
             return localUtils.checkObject(object, 'passwordreset').then(function then(data) {
-                var email = data.passwordreset[0].email;
+                const email = data.passwordreset[0].email;
 
                 if (typeof email !== 'string' || !validator.isEmail(email)) {
                     throw new common.errors.BadRequestError({
@@ -154,7 +154,7 @@ authentication = {
         }
 
         function generateToken(email) {
-            var options = {context: {internal: true}},
+            let options = {context: {internal: true}},
                 dbHash, token;
 
             return settingsAPI.read(_.merge({key: 'db_hash'}, options))
@@ -183,7 +183,7 @@ authentication = {
         }
 
         function sendResetNotification(data) {
-            var adminUrl = urlService.utils.urlFor('admin', true),
+            const adminUrl = urlService.utils.urlFor('admin', true),
                 resetUrl = urlService.utils.urlJoin(adminUrl, 'reset', security.url.encodeBase64(data.resetToken), '/');
 
             return mail.utils.generateContent({
@@ -192,7 +192,7 @@ authentication = {
                 },
                 template: 'reset-password'
             }).then(function then(content) {
-                var payload = {
+                const payload = {
                     mail: [{
                         message: {
                             to: data.email,
@@ -234,12 +234,16 @@ authentication = {
      * @returns {Promise<Object>} message
      */
     resetPassword: function resetPassword(object, opts) {
-        var tasks, tokenIsCorrect, dbHash, options = {context: {internal: true}}, tokenParts;
+        let tasks,
+            tokenIsCorrect,
+            dbHash,
+            options = {context: {internal: true}},
+            tokenParts;
 
         function validateRequest() {
             return localUtils.validate('passwordreset')(object, options)
                 .then(function (options) {
-                    var data = options.data.passwordreset[0];
+                    const data = options.data.passwordreset[0];
 
                     if (data.newPassword !== data.ne2Password) {
                         return Promise.reject(new common.errors.ValidationError({
@@ -280,7 +284,7 @@ authentication = {
         }
 
         function doReset(options) {
-            var data = options.data.passwordreset[0],
+            const data = options.data.passwordreset[0],
                 resetToken = data.token,
                 oldPassword = data.oldPassword,
                 newPassword = data.newPassword;
@@ -357,7 +361,9 @@ authentication = {
      * @returns {Promise<Object>}
      */
     acceptInvitation: function acceptInvitation(invitation) {
-        var tasks, invite, options = {context: {internal: true}};
+        let tasks,
+            invite,
+            options = {context: {internal: true}};
 
         function validateInvitation(invitation) {
             return localUtils.checkObject(invitation, 'invitation')
@@ -383,7 +389,8 @@ authentication = {
         }
 
         function processInvitation(invitation) {
-            var data = invitation.invitation[0], inviteToken = security.url.decodeBase64(data.token);
+            const data = invitation.invitation[0],
+                inviteToken = security.url.decodeBase64(data.token);
 
             return models.Invite.findOne({token: inviteToken, status: 'sent'}, options)
                 .then(function (_invite) {
@@ -433,11 +440,11 @@ authentication = {
      * @returns {Promise<Object>} An invitation status
      */
     isInvitation: function isInvitation(options) {
-        var tasks,
+        let tasks,
             localOptions = _.cloneDeep(options || {});
 
         function processArgs(options) {
-            var email = options.email;
+            const email = options.email;
 
             if (typeof email !== 'string' || !validator.isEmail(email)) {
                 throw new common.errors.BadRequestError({
@@ -477,7 +484,7 @@ authentication = {
      * @return {Promise}
      */
     isSetup: function isSetup() {
-        var tasks;
+        let tasks;
 
         function checkSetupStatus() {
             return models.User.isSetup();
@@ -511,14 +518,14 @@ authentication = {
      * @return {Promise<Object>} a user api payload
      */
     setup: function setup(setupDetails) {
-        var tasks;
+        let tasks;
 
         function doSetup(setupDetails) {
             return setupTasks(setupDetails);
         }
 
         function sendNotification(setupUser) {
-            var data = {
+            const data = {
                 ownerEmail: setupUser.email
             };
 
@@ -526,7 +533,7 @@ authentication = {
 
             return mail.utils.generateContent({data: data, template: 'welcome'})
                 .then(function then(content) {
-                    var message = {
+                    const message = {
                             to: setupUser.email,
                             subject: common.i18n.t('common.api.authentication.mail.yourNewGhostBlog'),
                             html: content.html,
@@ -569,7 +576,7 @@ authentication = {
      * @return {Promise<Object>} a User API response payload
      */
     updateSetup: function updateSetup(setupDetails, options) {
-        var tasks,
+        let tasks,
             localOptions = _.cloneDeep(options || {});
 
         function processArgs(setupDetails, options) {
@@ -613,7 +620,7 @@ authentication = {
      * @return {Promise<Object>} an object containing the revoked token.
      */
     revoke: function revokeToken(tokenDetails, options) {
-        var tasks,
+        let tasks,
             localOptions = _.cloneDeep(options || {});
 
         function processArgs(tokenDetails, options) {
@@ -621,7 +628,7 @@ authentication = {
         }
 
         function revokeToken(options) {
-            var providers = [
+            const providers = [
                     models.Refreshtoken,
                     models.Accesstoken
                 ],
