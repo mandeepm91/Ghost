@@ -242,7 +242,7 @@ authentication = {
 
         function validateRequest() {
             return localUtils.validate('passwordreset')(object, options)
-                .then(function (options) {
+                .then((options) => {
                     const data = options.data.passwordreset[0];
 
                     if (data.newPassword !== data.ne2Password) {
@@ -324,10 +324,8 @@ authentication = {
                     updatedUser.set('status', 'active');
                     return updatedUser.save(options);
                 })
-                .catch(common.errors.ValidationError, function (err) {
-                    return Promise.reject(err);
-                })
-                .catch(function (err) {
+                .catch(common.errors.ValidationError, (err) => { Promise.reject(err); })
+                .catch((err) => {
                     if (common.errors.utils.isIgnitionError(err)) {
                         return Promise.reject(err);
                     }
@@ -367,7 +365,7 @@ authentication = {
 
         function validateInvitation(invitation) {
             return localUtils.checkObject(invitation, 'invitation')
-                .then(function () {
+                .then(() => {
                     if (!invitation.invitation[0].token) {
                         return Promise.reject(new common.errors.ValidationError({message: common.i18n.t('errors.api.authentication.noTokenProvided')}));
                     }
@@ -393,7 +391,7 @@ authentication = {
                 inviteToken = security.url.decodeBase64(data.token);
 
             return models.Invite.findOne({token: inviteToken, status: 'sent'}, options)
-                .then(function (_invite) {
+                .then((_invite) => {
                     invite = _invite;
 
                     if (!invite) {
@@ -411,9 +409,7 @@ authentication = {
                         roles: [invite.toJSON().role_id]
                     }, options);
                 })
-                .then(function () {
-                    return invite.destroy(options);
-                });
+                .then(() => { invite.destroy(options); });
         }
 
         function formatResponse() {
@@ -547,7 +543,7 @@ authentication = {
                         };
 
                     mailAPI.send(payload, {context: {internal: true}})
-                        .catch(function (err) {
+                        .catch((err) => {
                             err.context = common.i18n.t('errors.api.authentication.unableToSendWelcomeEmail');
                             common.logging.error(err);
                         });
@@ -589,7 +585,7 @@ authentication = {
 
         function checkPermission(options) {
             return models.User.findOne({role: 'Owner', status: 'all'})
-                .then(function (owner) {
+                .then((owner) => {
                     if (owner.id !== options.context.user) {
                         throw new common.errors.NoPermissionError({message: common.i18n.t('errors.api.authentication.notTheBlogOwner')});
                     }
@@ -637,7 +633,7 @@ authentication = {
             function destroyToken(provider, options, providers) {
                 return provider.destroyByToken(options)
                     .return(response)
-                    .catch(provider.NotFoundError, function () {
+                    .catch(provider.NotFoundError, () => {
                         if (!providers.length) {
                             return {
                                 token: tokenDetails.token,
@@ -647,7 +643,7 @@ authentication = {
 
                         return destroyToken(providers.pop(), options, providers);
                     })
-                    .catch(function () {
+                    .catch(() => {
                         throw new common.errors.TokenRevocationError({
                             message: common.i18n.t('errors.api.authentication.tokenRevocationFailed')
                         });
