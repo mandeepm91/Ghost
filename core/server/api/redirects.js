@@ -44,9 +44,7 @@ _private.readRedirectsFile = function readRedirectsFile(customRedirectsPath) {
 redirectsAPI = {
     download: function download(options) {
         return localUtils.handlePermissions('redirects', 'download')(options)
-            .then(function () {
-                return _private.readRedirectsFile();
-            });
+            .then(() => { return _private.readRedirectsFile(); });
     },
     upload: function upload(options) {
         let redirectsPath = path.join(config.getContentPath('data'), 'redirects.json'),
@@ -55,30 +53,28 @@ redirectsAPI = {
         return localUtils.handlePermissions('redirects', 'upload')(options)
             .then(function backupOldRedirectsFile() {
                 return fs.pathExists(redirectsPath)
-                    .then(function (exists) {
+                    .then((exists) => {
                         if (!exists) {
                             return null;
                         }
 
                         return fs.pathExists(backupRedirectsPath)
-                            .then(function (exists) {
+                            .then((exists) => {
                                 if (!exists) {
                                     return null;
                                 }
 
                                 return fs.unlink(backupRedirectsPath);
                             })
-                            .then(function () {
-                                return fs.move(redirectsPath, backupRedirectsPath);
-                            });
+                            .then(() => { return fs.move(redirectsPath, backupRedirectsPath); });
                     })
                     .then(function overrideFile() {
                         return _private.readRedirectsFile(options.path)
-                            .then(function (content) {
+                            .then((content) => {
                                 validation.validateRedirects(content);
                                 return fs.writeFile(redirectsPath, JSON.stringify(content), 'utf-8');
                             })
-                            .then(function () {
+                            .then(() => {
                                 // CASE: trigger that redirects are getting re-registered
                                 customRedirectsMiddleware.reload();
                             });

@@ -1,5 +1,5 @@
-var Promise = require('bluebird'),
-    _ = require('lodash'),
+const Promise = require('bluebird'),
+    {isEmpty, pick} = require('lodash'),
     moment = require('moment'),
     pipeline = require('../lib/promise/pipeline'),
     localUtils = require('./utils'),
@@ -18,12 +18,13 @@ var Promise = require('bluebird'),
  * object.force: you can force publishing a post in the past (for example if your service was down)
  */
 exports.publishPost = function publishPost(object, options) {
-    if (_.isEmpty(options)) {
+    if (isEmpty(options)) {
         options = object || {};
         object = {};
     }
 
-    var post, publishedAtMoment,
+    let post,
+        publishedAtMoment,
         publishAPostBySchedulerToleranceInMinutes = config.get('times').publishAPostBySchedulerToleranceInMinutes;
 
     // CASE: only the scheduler client is allowed to publish (hardcoded because of missing client permission system)
@@ -38,7 +39,7 @@ exports.publishPost = function publishPost(object, options) {
         function (cleanOptions) {
             cleanOptions.status = 'scheduled';
 
-            return models.Base.transaction(function (transacting) {
+            return models.Base.transaction((transacting) => {
                 cleanOptions.transacting = transacting;
                 cleanOptions.forUpdate = true;
 
@@ -46,7 +47,7 @@ exports.publishPost = function publishPost(object, options) {
                 cleanOptions.opts = ['forUpdate', 'transacting'];
 
                 return postsAPI.read(cleanOptions)
-                    .then(function (result) {
+                    .then((result) => {
                         post = result.posts[0];
                         publishedAtMoment = moment(post.published_at);
 
@@ -62,7 +63,7 @@ exports.publishPost = function publishPost(object, options) {
                             {
                                 posts: [{status: 'published'}]
                             },
-                            _.pick(cleanOptions, ['context', 'id', 'transacting', 'forUpdate', 'opts'])
+                            pick(cleanOptions, ['context', 'id', 'transacting', 'forUpdate', 'opts'])
                         );
                     });
             });
@@ -93,9 +94,7 @@ exports.getScheduledPosts = function readPosts(options) {
             }
 
             return models.Post.findAll(cleanOptions)
-                .then(function (result) {
-                    return Promise.resolve({posts: result.models});
-                });
+                .then((result) => { return Promise.resolve({posts: result.models}); });
         }
     ], options);
 };
