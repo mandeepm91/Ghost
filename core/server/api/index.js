@@ -4,7 +4,7 @@
 // Ghost's JSON API is integral to the workings of Ghost, regardless of whether you want to access data internally,
 // from a theme, an app, or from an external app, you'll use the Ghost JSON API to do so.
 
-var _ = require('lodash'),
+let {extend, isEmpty, isFunction} = require('lodash'),
     Promise = require('bluebird'),
     models = require('../models'),
     urlService = require('../services/url'),
@@ -66,7 +66,7 @@ function isActiveThemeUpdate(method, endpoint, result) {
  * @return {String} Resolves to header string
  */
 cacheInvalidationHeader = function cacheInvalidationHeader(req, result) {
-    var parsedUrl = req._parsedUrl.pathname.replace(/^\/|\/$/g, '').split('/'),
+    let parsedUrl = req._parsedUrl.pathname.replace(/^\/|\/$/g, '').split('/'),
         method = req.method,
         endpoint = parsedUrl[0],
         subdir = parsedUrl[1],
@@ -121,7 +121,7 @@ cacheInvalidationHeader = function cacheInvalidationHeader(req, result) {
  * @return {String} Resolves to header string
  */
 locationHeader = function locationHeader(req, result) {
-    var apiRoot = urlService.utils.urlFor('api'),
+    let apiRoot = urlService.utils.urlFor('api'),
         location,
         newObject,
         statusQuery;
@@ -129,7 +129,7 @@ locationHeader = function locationHeader(req, result) {
     if (req.method === 'POST') {
         if (result.hasOwnProperty('posts')) {
             newObject = result.posts[0];
-            statusQuery = '/?status=' + newObject.status;
+            statusQuery = `/?status=${newObject.status}`;
             location = urlService.utils.urlJoin(apiRoot, 'posts', newObject.id, statusQuery);
         } else if (result.hasOwnProperty('notifications')) {
             newObject = result.notifications[0];
@@ -166,13 +166,13 @@ locationHeader = function locationHeader(req, result) {
 
 contentDispositionHeaderExport = function contentDispositionHeaderExport() {
     return exporter.fileName().then(function then(filename) {
-        return 'Attachment; filename="' + filename + '"';
+        return `Attachment; filename="${filename}"`;
     });
 };
 
 contentDispositionHeaderSubscribers = function contentDispositionHeaderSubscribers() {
-    var datetime = (new Date()).toJSON().substring(0, 10);
-    return Promise.resolve('Attachment; filename="subscribers.' + datetime + '.csv"');
+    const datetime = (new Date()).toJSON().substring(0, 10);
+    return Promise.resolve(`Attachment; filename="subscribers.${datetime}.csv"`);
 };
 
 contentDispositionHeaderRedirects = function contentDispositionHeaderRedirects() {
@@ -180,7 +180,7 @@ contentDispositionHeaderRedirects = function contentDispositionHeaderRedirects()
 };
 
 addHeaders = function addHeaders(apiMethod, req, res, result) {
-    var cacheInvalidation,
+    let cacheInvalidation,
         location,
         contentDisposition;
 
@@ -248,8 +248,8 @@ addHeaders = function addHeaders(apiMethod, req, res, result) {
 http = function http(apiMethod) {
     return function apiHandler(req, res, next) {
         // We define 2 properties for using as arguments in API calls:
-        var object = req.body,
-            options = _.extend({}, req.file, {ip: req.ip}, req.query, req.params, {
+        let object = req.body,
+            options = extend({}, req.file, {ip: req.ip}, req.query, req.params, {
                 context: {
                     // @TODO: forward the client and user obj in 1.0 (options.context.user.id)
                     user: ((req.user && req.user.id) || (req.user && models.User.isExternalUser(req.user.id))) ? req.user.id : null,
@@ -260,7 +260,7 @@ http = function http(apiMethod) {
 
         // If this is a GET, or a DELETE, req.body should be null, so we only have options (route and query params)
         // If this is a PUT, POST, or PATCH, req.body is an object
-        if (_.isEmpty(object)) {
+        if (isEmpty(object)) {
             object = options;
             options = {};
         }
@@ -279,7 +279,7 @@ http = function http(apiMethod) {
 
             // CASE: api method response wants to handle the express response
             // example: serve files (stream)
-            if (_.isFunction(response)) {
+            if (isFunction(response)) {
                 return response(req, res, next);
             }
 
