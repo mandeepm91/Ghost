@@ -1,7 +1,7 @@
 // # Posts API
 // RESTful API for the Post resource
 const Promise = require('bluebird'),
-    _ = require('lodash'),
+    {omit, defaults} = require('lodash'),
     pipeline = require('../lib/promise/pipeline'),
     localUtils = require('./utils'),
     models = require('../models'),
@@ -39,7 +39,7 @@ posts = {
      * @returns {Promise<Posts>} Posts Collection with Meta
      */
     browse: function browse(options) {
-        var extraOptions = ['status', 'formats'],
+        let extraOptions = ['status', 'formats'],
             permittedOptions,
             tasks;
 
@@ -81,7 +81,7 @@ posts = {
      * @return {Promise<Post>} Post
      */
     read: function read(options) {
-        var attrs = ['id', 'slug', 'status', 'uuid'],
+        let attrs = ['id', 'slug', 'status', 'uuid'],
             // NOTE: the scheduler API uses the post API and forwards custom options
             extraAllowedOptions = options.opts || ['formats'],
             tasks;
@@ -93,7 +93,7 @@ posts = {
          * @returns {Object} options
          */
         function modelQuery(options) {
-            return models.Post.findOne(options.data, _.omit(options, ['data']))
+            return models.Post.findOne(options.data, omit(options, ['data']))
                 .then(function onModelResponse(model) {
                     if (!model) {
                         return Promise.reject(new common.errors.NotFoundError({
@@ -129,7 +129,7 @@ posts = {
      * @return {Promise(Post)} Edited Post
      */
     edit: function edit(object, options) {
-        var tasks,
+        let tasks,
             // NOTE: the scheduler API uses the post API and forwards custom options
             extraAllowedOptions = options.opts || [];
 
@@ -140,7 +140,7 @@ posts = {
          * @returns {Object} options
          */
         function modelQuery(options) {
-            return models.Post.edit(options.data.posts[0], _.omit(options, ['data']))
+            return models.Post.edit(options.data.posts[0], omit(options, ['data']))
                 .then(function onModelResponse(model) {
                     if (!model) {
                         return Promise.reject(new common.errors.NotFoundError({
@@ -148,7 +148,7 @@ posts = {
                         }));
                     }
 
-                    var post = model.toJSON(options);
+                    const post = model.toJSON(options);
 
                     // If previously was not published and now is (or vice versa), signal the change
                     // @TODO: `statusChanged` get's added for the API headers only. Reconsider this.
@@ -185,7 +185,7 @@ posts = {
      * @return {Promise(Post)} Created Post
      */
     add: function add(object, options) {
-        var tasks;
+        let tasks;
 
         /**
          * ### Model Query
@@ -194,9 +194,9 @@ posts = {
          * @returns {Object} options
          */
         function modelQuery(options) {
-            return models.Post.add(options.data.posts[0], _.omit(options, ['data']))
+            return models.Post.add(options.data.posts[0], omit(options, ['data']))
                 .then(function onModelResponse(model) {
-                    var post = model.toJSON(options);
+                    const post = model.toJSON(options);
 
                     if (post.status === 'published') {
                         // When creating a new post that is published right now, signal the change
@@ -229,17 +229,17 @@ posts = {
      * @return {Promise}
      */
     destroy: function destroy(options) {
-        var tasks;
+        let tasks;
 
         /**
          * @function deletePost
          * @param  {Object} options
          */
         function deletePost(options) {
-            const opts = _.defaults({require: true}, options);
+            const opts = defaults({require: true}, options);
 
             return models.Post.destroy(opts).return(null)
-                .catch(models.Post.NotFoundError, function () {
+                .catch(models.Post.NotFoundError, () => {
                     throw new common.errors.NotFoundError({
                         message: common.i18n.t('errors.api.posts.postNotFound')
                     });
