@@ -20,6 +20,30 @@ describe('Url', function () {
         sandbox.restore();
     });
 
+    describe('absoluteToRelative', function () {
+        it('default', function () {
+            urlService.utils.absoluteToRelative('http://myblog.com/test/').should.eql('/test/');
+        });
+
+        it('with subdir', function () {
+            urlService.utils.absoluteToRelative('http://myblog.com/blog/test/').should.eql('/blog/test/');
+        });
+
+        it('with subdir, but request without', function () {
+            configUtils.set('url', 'http://myblog.com/blog/');
+
+            urlService.utils.absoluteToRelative('http://myblog.com/blog/test/', {withoutSubdirectory: true})
+                .should.eql('/test/');
+        });
+
+        it('with subdir, but request without', function () {
+            configUtils.set('url', 'http://myblog.com/blog');
+
+            urlService.utils.absoluteToRelative('http://myblog.com/blog/test/', {withoutSubdirectory: true})
+                .should.eql('/test/');
+        });
+    });
+
     describe('getProtectedSlugs', function () {
         it('defaults', function () {
             urlService.utils.getProtectedSlugs().should.eql(['ghost', 'rss', 'amp']);
@@ -186,6 +210,16 @@ describe('Url', function () {
             configUtils.set({url: 'http://my-ghost-blog.com/blog'});
             urlService.utils.urlFor(testContext).should.equal('/blog/about/');
             urlService.utils.urlFor(testContext, true).should.equal('http://my-ghost-blog.com/blog/about/');
+
+            testContext.secure = true;
+            urlService.utils.urlFor(testContext, true).should.equal('https://my-ghost-blog.com/blog/about/');
+
+            testContext.secure = false;
+            urlService.utils.urlFor(testContext, true).should.equal('http://my-ghost-blog.com/blog/about/');
+
+            testContext.secure = false;
+            configUtils.set({url: 'https://my-ghost-blog.com'});
+            urlService.utils.urlFor(testContext, true).should.equal('https://my-ghost-blog.com/about/');
         });
 
         it('should deduplicate subdirectories in paths', function () {
